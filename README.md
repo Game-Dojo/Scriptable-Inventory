@@ -1,0 +1,2 @@
+# Scriptable-Inventory
+ScriptableObjects example
