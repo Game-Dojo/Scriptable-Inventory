@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a9e0241a7fd377341bbdd2dc1a882a30, type: 3}
-  m_Name: Shield
+  m_Name: Hammer
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   icon: {fileID: 21300000, guid: 25f29a0fc17bced40a0f0e8bcd444677, type: 3}
   itemName: Hammer
