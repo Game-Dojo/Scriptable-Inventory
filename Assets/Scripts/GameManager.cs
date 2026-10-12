@@ -5,12 +5,18 @@ using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("Slots")]
     [SerializeField] private Transform gridSlots;
-    [SerializeField] private RectTransform targetSlots;
+    [SerializeField] private Transform dropSlots;
+    
+    [Header("Visuals")]
     [SerializeField] private RectTransform cursorSlot;
     [SerializeField] private TMP_Text itemInfo;
 
+    [Header("Prefabs")]
     [SerializeField] private Slot slotPrefab;
+    
+    [Header("Inventory")]
     [SerializeField] private List<ItemData> items;
 
     private Slot _currentSlot;
@@ -41,9 +47,9 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        //if (!_currentSlot) return;
         var mousePosition = Mouse.current.position.ReadValue();
         cursorSlot.position = mousePosition;
-
         
         //RectTransformUtility.ScreenPointToLocalPointInRectangle();
         //rectTransform.localPosition = localPoint;
@@ -57,12 +63,18 @@ public class GameManager : MonoBehaviour
         {
             canvasGroup.alpha = 1.0f;
         }
-        
-        if (RectTransformUtility.RectangleContainsScreenPoint(targetSlots, cursorSlot.position))
+
+        foreach (Transform drop in dropSlots)
         {
-            _currentSlot.transform.SetParent(targetSlots);
+            var rect = drop.GetComponent<RectTransform>();
+            var hasChild = drop.childCount > 0;
+            
+            if (!hasChild && rect && RectTransformUtility.RectangleContainsScreenPoint(rect, cursorSlot.position))
+            {
+                _currentSlot.transform.SetParent(rect);
+            }
         }
-        
+
         _currentSlot = null;
     }
 
@@ -79,7 +91,7 @@ public class GameManager : MonoBehaviour
         
         if (cursorSlot.TryGetComponent<Slot>(out var slot))
         {
-            slot.SetImage(iconSprite);
+            slot.SetIcon(iconSprite);
         }
     }
 

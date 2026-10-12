@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,6 +8,7 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
 {
     [SerializeField] private ItemData data;
     [SerializeField] private Image icon;
+    [SerializeField] private TMP_Text quantity;
     
     public Action<string, string> OnInfoSelected;
     public Action<Slot, Sprite> OnSlotClicked;
@@ -17,12 +19,9 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
     private void Start()
     {
         icon.sprite = data.icon;
-        if (data.collected)
-        {
-            icon.color = Color.red;
-        }
+        quantity.text = data.quantity.ToString();
     }
-
+    
     public void OnPointerEnter(PointerEventData eventData)
     {
         OnInfoSelected?.Invoke(data.itemName, data.description);
@@ -41,12 +40,12 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
         OnSlotReleased?.Invoke();
     }
     
-    public void SetData( ItemData newData)
+    public void SetData(ItemData newData)
     {
         data = newData;
     }
 
-    public void SetImage(Sprite newImage)
+    public void SetIcon(Sprite newImage)
     {
         icon.sprite = newImage;
         icon.color = Color.white;

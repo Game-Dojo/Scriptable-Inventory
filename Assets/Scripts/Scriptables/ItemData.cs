@@ -8,4 +8,6 @@ public class ItemData : ScriptableObject
     public string description;
     public int quantity;
     public bool collected;
+    
+    
 }
