@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   icon: {fileID: 21300000, guid: f412e8373f15ac34f935edec54ce49eb, type: 3}
   itemName: Bow
+  itemType: 3
   description: Long range attack
-  quantity: 1
+  quantity: 3
   collected: 0

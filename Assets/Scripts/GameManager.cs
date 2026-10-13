@@ -1,17 +1,17 @@
 using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public enum QuantityType
+    private enum QuantityDivisionType
     {
         One,
         Half,
         All
     }
-    
+
     [Header("Slots")]
     [SerializeField] private Transform gridSlots;
     [SerializeField] private Transform dropSlots;
@@ -34,8 +34,9 @@ public class GameManager : MonoBehaviour
     private InputActionReference oneItemAction;
 
     private Slot _currentSlot;
-    private QuantityType _quantityType = QuantityType.All;
+    private QuantityDivisionType _quantityDivisionType = QuantityDivisionType.All;
     
+    #region Unity Methods
     private void OnEnable()
     {
         cursorSlot.gameObject.SetActive(false);
@@ -59,35 +60,7 @@ public class GameManager : MonoBehaviour
         halfItemsAction.action.performed += OnHalfItemsAction;
         oneItemAction.action.performed += OnOneItemAction;
     }
-
-    private Slot CreateItem(ItemData data, Transform parentObject)
-    {
-        var newSlot = Instantiate(slotPrefab, transform.position, Quaternion.identity, parentObject);
-        if (newSlot) newSlot.SetData(data);
-        
-        if (_quantityType == QuantityType.One)
-            newSlot.UpdateQuantity(true);
-        else
-            newSlot.UpdateQuantity();
-        
-        return newSlot;
-    }
-
-    private void OnOneItemAction(InputAction.CallbackContext obj)
-    {
-        _quantityType = QuantityType.One;
-    }
-
-    private void OnHalfItemsAction(InputAction.CallbackContext obj)
-    {
-        _quantityType = QuantityType.Half;
-    }
-
-    private void OnAllItemsAction(InputAction.CallbackContext obj)
-    {
-        _quantityType = QuantityType.All;
-    }
-
+    
     private void Update()
     {
         //if (!_currentSlot) return;
@@ -98,77 +71,139 @@ public class GameManager : MonoBehaviour
         //rectTransform.localPosition = localPoint;
     }
     
-    private void OnSlotReleased()
+    private void OnDisable()
     {
-        cursorSlot.gameObject.SetActive(false);
-        
-        if (_currentSlot.gameObject.TryGetComponent<CanvasGroup>(out var canvasGroup))
+        foreach (Transform slotItem in gridSlots)
         {
-            canvasGroup.alpha = 1.0f;
-        }
-
-        foreach (Transform drop in dropSlots)
-        {
-            var rect = drop.GetComponent<RectTransform>();
-            var hasChild = drop.childCount > 0;
-            
-            if (!hasChild && rect && RectTransformUtility.RectangleContainsScreenPoint(rect, cursorSlot.position))
+            if (slotItem && slotItem.TryGetComponent<Slot>(out var slot))
             {
-                var slotData = _currentSlot.GetData();
-                
-                if (slotData.quantity > 1)
-                {
-                    Slot item;
-                    
-                    switch (_quantityType)
-                    {
-                        case QuantityType.One:
-                            slotData.ModifyQuantityByOne();
-                            _currentSlot.UpdateQuantity();
-                            
-                            item = CreateItem(slotData, drop);
-                            if (item)
-                            {
-                                item.UpdateQuantity(true);
-                                if (item.TryGetComponent<Slot>(out var slot))
-                                {
-                                    slot.OnInfoSelected += OnSlotHover;
-                                    slot.OnSlotClicked += OnSlotClicked;
-                                    slot.OnSlotReleased += OnSlotReleased;
-                                }
-                            }
-                            break;
-                        
-                        case QuantityType.Half:
-                            slotData.ModifyQuantityByHalf();
-                            _currentSlot.UpdateQuantity();
-                            
-                            item = CreateItem(slotData, drop);
-                            if (item)
-                            {
-                                item.UpdateQuantity();
-                                if (item.TryGetComponent<Slot>(out var slot))
-                                {
-                                    slot.OnInfoSelected += OnSlotHover;
-                                    slot.OnSlotClicked += OnSlotClicked;
-                                    slot.OnSlotReleased += OnSlotReleased;
-                                }
-                            }
-                            break;
-                        
-                        case QuantityType.All:
-                            _currentSlot.transform.SetParent(rect);
-                            break;
-                    }
-                }
-                else
-                {
-                    _currentSlot.transform.SetParent(rect);
-                }
+                slot.OnInfoSelected -= OnSlotHover;
+                slot.OnSlotClicked -= OnSlotClicked;
+                slot.OnSlotReleased -= OnSlotReleased;
             }
         }
+        
+        allItemsAction.action.performed -= OnAllItemsAction;
+        halfItemsAction.action.performed -= OnHalfItemsAction;
+        oneItemAction.action.performed -= OnOneItemAction;
+    }
+    #endregion
+    
+    #region Set Quantity Type
+    private void OnOneItemAction(InputAction.CallbackContext obj)
+    {
+        _quantityDivisionType = QuantityDivisionType.One;
+    }
 
-        _currentSlot = null;
+    private void OnHalfItemsAction(InputAction.CallbackContext obj)
+    {
+        _quantityDivisionType = QuantityDivisionType.Half;
+    }
+
+    private void OnAllItemsAction(InputAction.CallbackContext obj)
+    {
+        _quantityDivisionType = QuantityDivisionType.All;
+    }
+    #endregion
+    
+    #region Item Creation
+    private void ProcessItem(RectTransform rect, Transform drop)
+    {
+        var slotData = _currentSlot.GetData();
+        var slotItems = _currentSlot.GetQuantity();
+                
+        if (slotItems > 1)
+        {
+            Slot item;
+            
+            switch (_quantityDivisionType)
+            {
+                case QuantityDivisionType.One:
+                    _currentSlot.ModifyQuantityByOne();
+                    _currentSlot.UpdateQuantity();
+                    
+                    item = CreateItem(slotData, drop);
+                    if (item)
+                    {
+                        if (item.TryGetComponent<Slot>(out var slot))
+                        {
+                            slot.ShowOne();
+                            
+                            slot.OnInfoSelected += OnSlotHover;
+                            slot.OnSlotClicked += OnSlotClicked;
+                            slot.OnSlotReleased += OnSlotReleased;
+                        }
+                    }
+                    break;
+                
+                case QuantityDivisionType.Half:
+                    var itemsRest = _currentSlot.ModifyQuantityByHalf();
+                    _currentSlot.UpdateQuantity();
+                    
+                    var currentQuantity = _currentSlot.GetQuantity() - itemsRest;
+                    
+                    item = CreateItem(slotData, drop);
+                    if (item)
+                    {
+                        if (item.TryGetComponent<Slot>(out var slot))
+                        {
+                            slot.SetQuantity(currentQuantity);
+                            slot.UpdateQuantity();
+                            
+                            slot.OnInfoSelected += OnSlotHover;
+                            slot.OnSlotClicked += OnSlotClicked;
+                            slot.OnSlotReleased += OnSlotReleased;
+                        }
+                    }
+                    break;
+                
+                case QuantityDivisionType.All:
+                    _currentSlot.transform.SetParent(rect);
+                    break;
+            }
+
+            return;
+        }
+        
+        _currentSlot.transform.SetParent(rect);
+    }
+
+    private void ProcessStackableItem(RectTransform rect, Transform drop)
+    {
+        var slotData = _currentSlot.GetData();
+        var slotType = slotData.itemType;
+        var slotItems = _currentSlot.GetQuantity();
+
+        if (rect.childCount < 1) return;
+        var currentItemInSlot = rect.GetChild(0);
+        if (!currentItemInSlot) return;
+        if (currentItemInSlot.TryGetComponent<Slot>(out var actualSlot))
+        {
+            if (actualSlot.GetData().itemType == slotType)
+            {
+                print("Same Type");
+            }
+        }
+        
+        //Destroy(_currentSlot.gameObject);
+    }
+
+    private Slot CreateItem(ItemData data, Transform parentObject)
+    {
+        var newSlot = Instantiate(slotPrefab, transform.position, Quaternion.identity, parentObject);
+        if (newSlot)
+        {
+            newSlot.SetData(data);
+        }
+        
+        return newSlot;
+    }
+    #endregion
+    
+    #region Slot Actions
+    private void OnSlotHover(string itemName, string itemDescription)
+    {
+        itemInfo.text = $"<color=yellow>Nombre:</color> {itemName} | <color=yellow>Descripción:</color> {itemDescription}";
     }
 
     private void OnSlotClicked(Slot clickedSlot, Sprite iconSprite)
@@ -187,26 +222,31 @@ public class GameManager : MonoBehaviour
             slot.SetIcon(iconSprite);
         }
     }
-
-    private void OnSlotHover(string itemName, string itemDescription)
+    
+    private void OnSlotReleased()
     {
-        itemInfo.text = $"<color=yellow>Nombre:</color> {itemName} | <color=yellow>Descripción:</color> {itemDescription}";
-    }
-
-    private void OnDisable()
-    {
-        foreach (Transform slotItem in gridSlots)
-        {
-            if (slotItem.TryGetComponent<Slot>(out var slot))
-            {
-                slot.OnInfoSelected -= OnSlotHover;
-                slot.OnSlotClicked -= OnSlotClicked;
-                slot.OnSlotReleased -= OnSlotReleased;
-            }
-        }
+        cursorSlot.gameObject.SetActive(false);
         
-        allItemsAction.action.performed -= OnAllItemsAction;
-        halfItemsAction.action.performed -= OnHalfItemsAction;
-        oneItemAction.action.performed -= OnOneItemAction;
+        if (_currentSlot.gameObject.TryGetComponent<CanvasGroup>(out var canvasGroup))
+        {
+            canvasGroup.alpha = 1.0f;
+        }
+
+        foreach (Transform drop in dropSlots)
+        {
+            var rect = drop.GetComponent<RectTransform>();
+            var hasChild = drop.childCount > 0;
+
+            if (!rect ||
+                !RectTransformUtility.RectangleContainsScreenPoint(rect, cursorSlot.position)) continue;
+            
+            if (hasChild)
+                ProcessStackableItem(rect, drop);
+            else
+                ProcessItem(rect, drop);
+        }
+
+        _currentSlot = null;
     }
+    #endregion
 }

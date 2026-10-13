@@ -1,8 +1,8 @@
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IPointerUpHandler
 {
@@ -15,13 +15,9 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
     public Action OnSlotReleased;
     
     private bool _isDragging = false;
+    private int _itemsCount = 0;
     
-    private void Start()
-    {
-        icon.sprite = data.icon;
-        UpdateQuantity();
-    }
-    
+    #region Events
     public void OnPointerEnter(PointerEventData eventData)
     {
         OnInfoSelected?.Invoke(data.itemName, data.description);
@@ -39,10 +35,16 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
         _isDragging = false;
         OnSlotReleased?.Invoke();
     }
+    #endregion
     
+    #region Data Management
     public void SetData(ItemData newData)
     {
         data = newData;
+        icon.sprite = data.icon;
+        _itemsCount = data.quantity;
+        
+        UpdateQuantity();
     }
 
     public void SetIcon(Sprite newImage)
@@ -51,20 +53,45 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
         icon.color = Color.white;
     }
 
-    public void UpdateQuantity(bool oneItem = false)
+    public void UpdateQuantity()
     {
-        if (oneItem)
-        {
-            quantity.text = "1";
-            print("One Item");
-            return;
-        }
-        
-        quantity.text = data.quantity.ToString();
+        quantity.text = _itemsCount.ToString();
     }
 
-    public ItemData GetData()
+    public void ShowOne()
     {
-        return data;
+        quantity.text = "1";
+        _itemsCount = 1;
     }
+
+    public void SetQuantity(int count)
+    {
+        quantity.text = count.ToString();
+        _itemsCount = count;
+    }
+    
+    public void ModifyQuantityByOne()
+    {
+        if (_itemsCount > 0) _itemsCount -= 1;
+    }
+    
+    public int ModifyQuantityByHalf()
+    {
+        var rest = 0;
+        
+        if (_itemsCount > 1)
+        {
+            rest = _itemsCount % 2;
+            _itemsCount /= 2;
+            _itemsCount += rest;
+        };
+
+        return rest;
+    }
+    #endregion
+
+    public ItemData GetData() => data;
+
+    public int GetQuantity() => _itemsCount;
+    
 }
