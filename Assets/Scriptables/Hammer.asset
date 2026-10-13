@@ -15,5 +15,5 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 25f29a0fc17bced40a0f0e8bcd444677, type: 3}
   itemName: Hammer
   description: Slow attack
-  quantity: 12
+  quantity: 93
   collected: 0

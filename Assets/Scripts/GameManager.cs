@@ -5,6 +5,13 @@ using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
+    public enum QuantityType
+    {
+        One,
+        Half,
+        All
+    }
+    
     [Header("Slots")]
     [SerializeField] private Transform gridSlots;
     [SerializeField] private Transform dropSlots;
@@ -19,7 +26,15 @@ public class GameManager : MonoBehaviour
     [Header("Inventory")]
     [SerializeField] private List<ItemData> items;
 
+    [Header("Input Actions")] [SerializeField]
+    private InputActionReference allItemsAction;
+    [SerializeField]
+    private InputActionReference halfItemsAction;
+    [SerializeField]
+    private InputActionReference oneItemAction;
+
     private Slot _currentSlot;
+    private QuantityType _quantityType = QuantityType.All;
     
     private void OnEnable()
     {
@@ -27,11 +42,7 @@ public class GameManager : MonoBehaviour
         
         foreach (var item in items)
         {
-            var newSlot = Instantiate(slotPrefab, transform.position, Quaternion.identity, gridSlots);
-            if (newSlot)
-            {
-                newSlot.SetData(item);
-            }
+            CreateItem(item, gridSlots);
         }
         
         foreach (Transform slotItem in gridSlots)
@@ -43,6 +54,38 @@ public class GameManager : MonoBehaviour
                 slot.OnSlotReleased += OnSlotReleased;
             }
         }
+
+        allItemsAction.action.performed += OnAllItemsAction;
+        halfItemsAction.action.performed += OnHalfItemsAction;
+        oneItemAction.action.performed += OnOneItemAction;
+    }
+
+    private Slot CreateItem(ItemData data, Transform parentObject)
+    {
+        var newSlot = Instantiate(slotPrefab, transform.position, Quaternion.identity, parentObject);
+        if (newSlot) newSlot.SetData(data);
+        
+        if (_quantityType == QuantityType.One)
+            newSlot.UpdateQuantity(true);
+        else
+            newSlot.UpdateQuantity();
+        
+        return newSlot;
+    }
+
+    private void OnOneItemAction(InputAction.CallbackContext obj)
+    {
+        _quantityType = QuantityType.One;
+    }
+
+    private void OnHalfItemsAction(InputAction.CallbackContext obj)
+    {
+        _quantityType = QuantityType.Half;
+    }
+
+    private void OnAllItemsAction(InputAction.CallbackContext obj)
+    {
+        _quantityType = QuantityType.All;
     }
 
     private void Update()
@@ -71,7 +114,57 @@ public class GameManager : MonoBehaviour
             
             if (!hasChild && rect && RectTransformUtility.RectangleContainsScreenPoint(rect, cursorSlot.position))
             {
-                _currentSlot.transform.SetParent(rect);
+                var slotData = _currentSlot.GetData();
+                
+                if (slotData.quantity > 1)
+                {
+                    Slot item;
+                    
+                    switch (_quantityType)
+                    {
+                        case QuantityType.One:
+                            slotData.ModifyQuantityByOne();
+                            _currentSlot.UpdateQuantity();
+                            
+                            item = CreateItem(slotData, drop);
+                            if (item)
+                            {
+                                item.UpdateQuantity(true);
+                                if (item.TryGetComponent<Slot>(out var slot))
+                                {
+                                    slot.OnInfoSelected += OnSlotHover;
+                                    slot.OnSlotClicked += OnSlotClicked;
+                                    slot.OnSlotReleased += OnSlotReleased;
+                                }
+                            }
+                            break;
+                        
+                        case QuantityType.Half:
+                            slotData.ModifyQuantityByHalf();
+                            _currentSlot.UpdateQuantity();
+                            
+                            item = CreateItem(slotData, drop);
+                            if (item)
+                            {
+                                item.UpdateQuantity();
+                                if (item.TryGetComponent<Slot>(out var slot))
+                                {
+                                    slot.OnInfoSelected += OnSlotHover;
+                                    slot.OnSlotClicked += OnSlotClicked;
+                                    slot.OnSlotReleased += OnSlotReleased;
+                                }
+                            }
+                            break;
+                        
+                        case QuantityType.All:
+                            _currentSlot.transform.SetParent(rect);
+                            break;
+                    }
+                }
+                else
+                {
+                    _currentSlot.transform.SetParent(rect);
+                }
             }
         }
 
@@ -111,5 +204,9 @@ public class GameManager : MonoBehaviour
                 slot.OnSlotReleased -= OnSlotReleased;
             }
         }
+        
+        allItemsAction.action.performed -= OnAllItemsAction;
+        halfItemsAction.action.performed -= OnHalfItemsAction;
+        oneItemAction.action.performed -= OnOneItemAction;
     }
 }

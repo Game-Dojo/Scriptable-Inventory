@@ -19,7 +19,7 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
     private void Start()
     {
         icon.sprite = data.icon;
-        quantity.text = data.quantity.ToString();
+        UpdateQuantity();
     }
     
     public void OnPointerEnter(PointerEventData eventData)
@@ -49,5 +49,22 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
     {
         icon.sprite = newImage;
         icon.color = Color.white;
+    }
+
+    public void UpdateQuantity(bool oneItem = false)
+    {
+        if (oneItem)
+        {
+            quantity.text = "1";
+            print("One Item");
+            return;
+        }
+        
+        quantity.text = data.quantity.ToString();
+    }
+
+    public ItemData GetData()
+    {
+        return data;
     }
 }

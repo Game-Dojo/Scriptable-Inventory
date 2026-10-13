@@ -1941,6 +1941,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4354c09eb3127d24ea541d6a454e18d3, type: 2}
   - {fileID: 11400000, guid: e2d80ad96ca8a254aa3b545447b4ca56, type: 2}
   - {fileID: 11400000, guid: be63efe693b6c1642abe6839328663ff, type: 2}
+  allItemsAction: {fileID: -5339778675180037489, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  halfItemsAction: {fileID: 5440378197078971534, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  oneItemAction: {fileID: -4484407963881265996, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
 --- !u!4 &1712023919
 Transform:
   m_ObjectHideFlags: 0

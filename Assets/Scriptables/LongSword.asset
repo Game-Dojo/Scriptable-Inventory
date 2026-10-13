@@ -15,5 +15,5 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9a2d1c6dbf52ea34698b2788673e5989, type: 3}
   itemName: Long Sword
   description: Lorem ipsum dolor sit amet
-  quantity: 99
+  quantity: 39
   collected: 1
