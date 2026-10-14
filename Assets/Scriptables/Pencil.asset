@@ -16,5 +16,5 @@ MonoBehaviour:
   itemName: Pencil
   itemType: 0
   description: Pencil attack
-  quantity: 5
+  quantity: 10
   collected: 0

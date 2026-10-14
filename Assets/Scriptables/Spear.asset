@@ -16,5 +16,5 @@ MonoBehaviour:
   itemName: Spear
   itemType: 0
   description: Spear
-  quantity: 1
+  quantity: 10
   collected: 0

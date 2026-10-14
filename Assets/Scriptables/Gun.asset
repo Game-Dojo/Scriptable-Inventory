@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   icon: {fileID: 21300000, guid: c902c4506f0c2cc43a09ddd91c708dd4, type: 3}
   itemName: Gun
-  itemType: 1
+  itemType: 4
   description: Lorem ipsum dolor sit amet
-  quantity: 5
+  quantity: 10
   collected: 1

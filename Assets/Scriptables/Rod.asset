@@ -16,5 +16,5 @@ MonoBehaviour:
   itemName: Rod
   itemType: 0
   description: Rod
-  quantity: 1
+  quantity: 10
   collected: 0
