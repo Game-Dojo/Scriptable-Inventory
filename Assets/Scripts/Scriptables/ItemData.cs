@@ -8,7 +8,8 @@ public class ItemData : ScriptableObject
         Sword,
         Shield,
         Bow,
-        Hammer
+        Hammer,
+        Gun
     }
     public Sprite icon;
     public string itemName;
