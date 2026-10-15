@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class GameManager : MonoBehaviour
     [Header("Slots")]
     [SerializeField] private Transform gridSlots;
     [SerializeField] private Transform dropSlots;
+    [SerializeField] private Transform targetSlots;
     
     [Header("Visuals")]
     [SerializeField] private RectTransform cursorSlot;
@@ -23,9 +25,12 @@ public class GameManager : MonoBehaviour
     [Header("Prefabs")]
     [SerializeField] private Slot slotPrefab;
     
+    [Header("Character")]
+    [SerializeField] private CharacterCustomization character;
+    
     [Header("Inventory")]
     [SerializeField] private List<ItemData> items;
-
+    
     [Header("Input Actions")] [SerializeField]
     private InputActionReference allItemsAction;
     [SerializeField]
@@ -34,6 +39,7 @@ public class GameManager : MonoBehaviour
     private InputActionReference oneItemAction;
 
     private Slot _currentSlot;
+    private DropZone _currentZone;
     private QuantityDivisionType _quantityDivisionType = QuantityDivisionType.All;
     
     #region Unity Methods
@@ -53,6 +59,16 @@ public class GameManager : MonoBehaviour
                 slot.OnInfoSelected += OnSlotHover;
                 slot.OnSlotClicked += OnSlotClicked;
                 slot.OnSlotReleased += OnSlotReleased;
+            }
+        }
+        
+        foreach (Transform targetSlotItem in targetSlots)
+        {
+            if (targetSlotItem.TryGetComponent<Slot>(out var slotItem))
+            {
+                slotItem.OnInfoSelected += OnSlotHover;
+                slotItem.OnSlotClicked += OnSlotClicked;
+                slotItem.OnSlotReleased += OnSlotReleased;
             }
         }
 
@@ -221,6 +237,13 @@ public class GameManager : MonoBehaviour
         {
             slot.SetIcon(iconSprite);
         }
+
+        if (_currentZone)
+        {
+            character.UnequipItem(_currentSlot.GetItemType());
+            _currentZone.ResetZoneColor();
+            _currentZone = null;
+        }
     }
     
     private void OnSlotReleased()
@@ -235,15 +258,36 @@ public class GameManager : MonoBehaviour
         foreach (Transform drop in dropSlots)
         {
             var rect = drop.GetComponent<RectTransform>();
-            var hasChild = drop.childCount > 0;
+            var hasChildren = drop.childCount > 0;
 
             if (!rect ||
                 !RectTransformUtility.RectangleContainsScreenPoint(rect, cursorSlot.position)) continue;
             
-            if (hasChild)
+            if (hasChildren)
                 ProcessStackableItem(rect, drop);
             else
                 ProcessItem(rect, drop);
+        }
+        
+        /* TODO: Cambiar esto a una función */
+        foreach (Transform drop in targetSlots)
+        {
+            var rect = drop.GetComponent<RectTransform>();
+            var hasChildren = drop.childCount > 0;
+
+            if (!rect || hasChildren ||
+                !RectTransformUtility.RectangleContainsScreenPoint(rect, cursorSlot.position)) continue;
+            
+            if (rect.TryGetComponent<DropZone>(out var zone))
+            {
+                if (zone.Check(_currentSlot.GetItemType()))
+                {
+                    character.EquipItem(_currentSlot.GetData());
+                }
+                _currentZone = zone;
+            }
+            
+            _currentSlot.transform.SetParent(rect);
         }
 
         _currentSlot = null;

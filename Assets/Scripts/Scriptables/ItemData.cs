@@ -9,8 +9,10 @@ public class ItemData : ScriptableObject
         Shield,
         Bow,
         Hammer,
-        Gun
+        Gun,
+        Hat
     }
+    
     public Sprite icon;
     public string itemName;
     public ItemType itemType;

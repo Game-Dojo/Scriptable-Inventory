@@ -82,9 +82,9 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
         if (_itemsCount > 1)
         {
             rest = _itemsCount % 2;
-            _itemsCount /= 2;
-            _itemsCount += rest;
-        };
+            _itemsCount += rest;_itemsCount /= 2;
+            
+        }
 
         return rest;
     }
@@ -93,5 +93,7 @@ public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IP
     public ItemData GetData() => data;
 
     public int GetQuantity() => _itemsCount;
+    
+    public ItemData.ItemType GetItemType() => data.itemType;
     
 }
